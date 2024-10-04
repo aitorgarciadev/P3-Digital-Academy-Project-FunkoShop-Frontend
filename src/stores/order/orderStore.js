@@ -1,180 +1,121 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_ENDPOINT + '/orders'
+// Base URL de la API desde las variables de entorno
+const BASE_URL = import.meta.env.VITE_API_ENDPOINT
 
-export const useOrderStore = defineStore('orderStore', () => {
-  const orders = ref([])
-  const order = ref(null)
-  const isLoading = ref(false)
-  const error = ref(null)
-  const currentPage = ref(0)
-  const pageSize = ref(8)
-  const totalPages = ref(0)
-  const accessToken = computed(() => localStorage.getItem('access_token'))
+export const useOrderStore = defineStore('orderStore', {
+  state: () => ({
+    orders: [],
+    order: null,
+    loading: false,
+    error: null
+  }),
 
-  const getAuthHeaders = () => {
-    if (!accessToken.value) {
-      throw new Error('Unauthorized: No access token found')
-    }
-    return {
-      Authorization: `Bearer ${accessToken.value}`
-    }
-  }
+  actions: {
+    // Obtener el token JWT desde el localStorage o cualquier otro método
+    getAuthToken() {
+      return localStorage.getItem('token') // Asegúrate de que el token esté guardado en el localStorage
+    },
 
-  const fetchOrders = async (url, params = {}) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const response = await axios.get(url, { params })
-      orders.value = response.data.content ? response.data.content : response.data
-      currentPage.value = response.data.number || 0
-      pageSize.value = response.data.size || 8
-      totalPages.value = response.data.totalPages || 1
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchAllOrders = async (page = 0, size = 8, sortBy = 'createdAt', sortOrder = 'desc') => {
-    const url = BASE_URL
-    const params = { page, size, sort: `${sortBy},${sortOrder}` }
-    await fetchOrders(url, params)
-  }
-
-  const fetchOrderById = async (id) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const response = await axios.get(`${BASE_URL}/${id}`, {
-        headers: getAuthHeaders()
-      })
-      order.value = response.data
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const createOrder = async (orderData) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const response = await axios.post(BASE_URL, orderData, {
-        headers: getAuthHeaders()
-      })
-      orders.value.push(response.data)
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const updateOrder = async (id, orderData) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const response = await axios.put(`${BASE_URL}/${id}`, orderData, {
-        headers: getAuthHeaders()
-      })
-      order.value = response.data
-      const index = orders.value.findIndex((o) => o.id === id)
-      if (index !== -1) {
-        orders.value[index] = response.data
+    // Configuración de Axios con el Token de Autorización
+    getAxiosConfig() {
+      const token = this.getAuthToken()
+      return {
+        headers: {
+          Authorization: `Bearer ${token}` // Incluir el token en el encabezado de autorización
+        }
       }
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
-    }
-  }
+    },
 
-  const deleteOrder = async (id) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      await axios.delete(`${BASE_URL}/${id}`, {
-        headers: getAuthHeaders()
-      })
-      orders.value = orders.value.filter((order) => order.id !== id)
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchOrdersByUser = async (userId) => {
-    const url = `${BASE_URL}/user/${userId}`
-    await fetchOrders(url)
-  }
-
-  const addOrderItemToOrder = async (orderId, orderItemData) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const response = await axios.post(`${BASE_URL}/${orderId}/items`, orderItemData, {
-        headers: getAuthHeaders()
-      })
-      const index = orders.value.findIndex((order) => order.id === orderId)
-      if (index !== -1) {
-        orders.value[index].items.push(response.data)
+    async fetchAllOrders() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.get(`${BASE_URL}/orders`, this.getAxiosConfig())
+        this.orders = response.data
+        this.error = null
+      } catch (error) {
+        console.error(error)
+        if (error.response.status === 403) {
+          this.error = 'No tienes permisos para ver las órdenes.'
+        } else {
+          this.error = 'Error al obtener las órdenes.'
+        }
+      } finally {
+        this.loading = false
       }
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
-    }
-  }
+    },
 
-  const removeOrderItemFromOrder = async (orderId, orderItemId) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      await axios.delete(`${BASE_URL}/${orderId}/items/${orderItemId}`, {
-        headers: getAuthHeaders()
-      })
-      const index = orders.value.findIndex((order) => order.id === orderId)
-      if (index !== -1) {
-        orders.value[index].items = orders.value[index].items.filter(
-          (item) => item.id !== orderItemId
+    async fetchOrderById(id) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.get(`${BASE_URL}/orders/${id}`, this.getAxiosConfig())
+        this.order = response.data
+        this.error = null
+      } catch (error) {
+        console.error(error)
+        if (error.response.status === 403) {
+          this.error = 'No tienes permisos para ver esta orden.'
+        } else {
+          this.error = 'Error al obtener la orden.'
+        }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async createOrder(orderData) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.post(`${BASE_URL}/orders`, orderData, this.getAxiosConfig())
+        this.orders.push(response.data)
+        this.error = null
+      } catch (error) {
+        console.error(error)
+        this.error = 'Error al crear la orden.'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updateOrder(id, orderData) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.put(
+          `${BASE_URL}/orders/${id}`,
+          orderData,
+          this.getAxiosConfig()
         )
+        const index = this.orders.findIndex((order) => order.id === id)
+        if (index !== -1) {
+          this.orders[index] = response.data
+        }
+        this.error = null
+      } catch (error) {
+        console.error(error)
+        this.error = 'Error al actualizar la orden.'
+      } finally {
+        this.loading = false
       }
-    } catch (err) {
-      handleError(err)
-    } finally {
-      isLoading.value = false
+    },
+
+    async deleteOrder(id) {
+      this.loading = true
+      this.error = null
+      try {
+        await axios.delete(`${BASE_URL}/orders/${id}`, this.getAxiosConfig())
+        this.orders = this.orders.filter((order) => order.id !== id)
+        this.error = null
+      } catch (error) {
+        console.error(error)
+        this.error = 'Error al eliminar la orden.'
+      } finally {
+        this.loading = false
+      }
     }
-  }
-
-  const handleError = (err) => {
-    error.value = err.response
-      ? `Server Error: ${err.response.status} - ${err.response.data.message || err.response.statusText}`
-      : err.request
-        ? 'No response from server. Please check your network or server status.'
-        : `Error: ${err.message}`
-  }
-
-  return {
-    orders,
-    order,
-    isLoading,
-    error,
-    currentPage,
-    pageSize,
-    totalPages,
-    fetchAllOrders,
-    fetchOrderById,
-    createOrder,
-    updateOrder,
-    deleteOrder,
-    fetchOrdersByUser,
-    addOrderItemToOrder,
-    removeOrderItemFromOrder
   }
 })

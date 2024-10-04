@@ -16,10 +16,10 @@ const {
 } = storeToRefs(orderStore)
 const itemsPerPage = 10
 onMounted(() => {
-  orderStore.fetchAllOrders()
+  orderStore.fetchOrderById()
 })
 const handlePageChange = (newPage) => {
-  orderStore.fetchAllOrders(newPage, itemsPerPage)
+  orderStore.fetchOrderById(newPage, itemsPerPage)
 }
 // TODO: decide if is needed
 // const handleViewOrder = (orderId) => {
