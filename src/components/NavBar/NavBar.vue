@@ -72,22 +72,37 @@ const open = ref(false)
   <div class="bg-white">
     <TransitionRoot as="template" :show="open">
       <Dialog class="relative z-40 lg:hidden" @close="open = false">
-        <TransitionChild as="template" enter="transition-opacity ease-linear duration-300" enter-from="opacity-0"
-          enter-to="opacity-100" leave="transition-opacity ease-linear duration-300" leave-from="opacity-100"
-          leave-to="opacity-0">
+        <TransitionChild
+          as="template"
+          enter="transition-opacity ease-linear duration-300"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="transition-opacity ease-linear duration-300"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
           <div class="fixed inset-0 bg-black bg-opacity-25" />
         </TransitionChild>
 
         <div class="fixed inset-0 z-40 flex">
-          <TransitionChild as="template" enter="transition ease-in-out duration-300 transform"
-            enter-from="-translate-x-full" enter-to="translate-x-0"
-            leave="transition ease-in-out duration-300 transform" leave-from="translate-x-0"
-            leave-to="-translate-x-full">
-            <DialogPanel class="relative flex w-full max-w-xs flex-col overflow-y-auto bg-slate-950 pb-12 shadow-xl">
+          <TransitionChild
+            as="template"
+            enter="transition ease-in-out duration-300 transform"
+            enter-from="-translate-x-full"
+            enter-to="translate-x-0"
+            leave="transition ease-in-out duration-300 transform"
+            leave-from="translate-x-0"
+            leave-to="-translate-x-full"
+          >
+            <DialogPanel
+              class="relative flex w-full max-w-xs flex-col overflow-y-auto bg-slate-950 pb-12 shadow-xl"
+            >
               <div class="flex px-4 pb-2 pt-5">
-                <button type="button"
+                <button
+                  type="button"
                   class="relative -m-2 inline-flex items-center justify-center rounded-md p-2 text-white"
-                  @click="open = false">
+                  @click="open = false"
+                >
                   <span class="absolute -inset-0.5" />
                   <span class="sr-only">Close menu</span>
                   <XMarkIcon class="h-6 w-6" aria-hidden="true" />
@@ -151,9 +166,7 @@ const open = ref(false)
                   </a>
                 </div>
                 <div class="flow-root" v-if="auth.user.role === 'ADMIN'">
-                  <a href="/admin" class="-m-2 block p-2 font-medium text-white">
-                    Dashboard
-                  </a>
+                  <a href="/admin" class="-m-2 block p-2 font-medium text-white"> Dashboard </a>
                 </div>
               </div>
             </DialogPanel>
@@ -185,13 +198,23 @@ const open = ref(false)
 
             <PopoverGroup class="hidden lg:ml-8 lg:block lg:self-stretch">
               <div class="flex h-full space-x-8">
-                <a href="/home" class="flex items-center text-sm font-medium text-white hover:text-blueFunko-300">
+                <a
+                  href="/home"
+                  class="flex items-center text-sm font-medium text-white hover:text-blueFunko-300"
+                >
                   {{ t('home') }}
                 </a>
-                <a href="/products" class="flex items-center text-sm font-medium text-white hover:text-blueFunko-300">
+                <a
+                  href="/products"
+                  class="flex items-center text-sm font-medium text-white hover:text-blueFunko-300"
+                >
                   {{ t('products') }}
                 </a>
-                <a v-if="auth.user.role === 'ADMIN'" href="/admin" class="flex items-center text-sm font-medium text-white hover:text-blueFunko-300">
+                <a
+                  v-if="auth.user.role === 'ADMIN'"
+                  href="/admin"
+                  class="flex items-center text-sm font-medium text-white hover:text-blueFunko-300"
+                >
                   Dashboard
                 </a>
                 <!-- <Popover v-for="category in navigation.categories" :key="category.name" class="flex" v-slot="{ open }">
